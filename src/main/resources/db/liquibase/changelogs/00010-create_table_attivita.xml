@@ -1,0 +1,37 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd">
+
+    <changeSet id="1" author="mveroni">
+        <comment>Creation of table attivita without foreign constraints</comment>
+        <sql>
+            CREATE TABLE attivita
+            (
+                id_attivita uuid NOT NULL,
+                id_materia uuid,
+                descrizione text,
+                data timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+                inizio_attivita time without time zone,
+                fine_attivita time without time zone,
+                durata_attivita bigint GENERATED ALWAYS AS (date_part('epoch'::text, (fine_attivita - inizio_attivita))) STORED,
+                CONSTRAINT attivita_pkey PRIMARY KEY (id_attivita),
+                CONSTRAINT check_fine_attivita_greater_than_inizio_attivita CHECK (fine_attivita > inizio_attivita)
+            )
+        </sql>
+        <rollback>
+            <dropTable tableName="attivita"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="2" author="mveroni">
+        <tagDatabase tag="00010" />
+    </changeSet>
+
+</databaseChangeLog>

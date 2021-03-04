@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd">
+
+    <changeSet id="1" author="mveroni">
+        <comment>Creation of table materie</comment>
+        <sql>
+            CREATE TABLE materie
+            (
+                id_materia uuid NOT NULL,
+                nome character varying(255) NOT NULL,
+                descrizione text,
+                studio_attivo boolean NOT NULL,
+                CONSTRAINT materie_pkey PRIMARY KEY (id_materia)
+            )
+        </sql>
+        <rollback>
+            <dropTable tableName="materie"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="2" author="mveroni">
+        <tagDatabase tag="00020" />
+    </changeSet>
+
+</databaseChangeLog>

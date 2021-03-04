@@ -1,0 +1,28 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd">
+
+    <changeSet id="1" author="mveroni">
+        <comment>Add foreign key in table attivita pointing to id materia in table materie</comment>
+        <sql>
+            ALTER TABLE attivita
+            ADD CONSTRAINT fk_id_materia_attivita FOREIGN KEY (id_materia)
+            REFERENCES materie (id_materia) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE;
+        </sql>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="attivita" constraintName="fk_id_materia_attivita"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="2" author="mveroni">
+        <tagDatabase tag="00050" />
+    </changeSet>
+
+</databaseChangeLog>

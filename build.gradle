@@ -1,0 +1,186 @@
+buildscript {
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+        resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'nu.studer.jooq' version '5.2'
+    id 'org.liquibase.gradle' version '2.0.4'
+}
+
+ext {
+    postgresVersion = '42.2.18'
+    jooqVersion = '3.14.0'
+    slf4jVersion = '1.7.30'
+    logbackVersion = '1.2.3'
+    lombokVersion = '1.18.12'
+    junit5Version = '5.7.0'
+
+//    dbschema = 'study'
+//    mainUrl = 'jdbc:postgresql://127.0.0.1:5432/study'
+    dbschema = 'public'
+    mainUrl = 'jdbc:postgresql://127.0.0.1:5432/postgres'
+//    mainUrl = 'jdbc:postgresql://127.0.0.1:5432/studyclone?currentSchema=study'
+    mainUsername = 'postgres'
+    mainPassword = 'Password01'
+}
+
+group 'com.matteoveroni.activityregister'
+version '1.0-SNAPSHOT'
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Database
+    implementation "org.postgresql:postgresql:${postgresVersion}"
+    implementation "org.jooq:jooq:${jooqVersion}"
+    implementation "org.jooq:jooq-codegen:${jooqVersion}"
+    implementation "org.jooq:jooq-meta:${jooqVersion}"
+
+    // Connection pool
+    implementation 'com.zaxxer:HikariCP:3.4.5'
+
+    // JOOQ
+    jooqGenerator "org.postgresql:postgresql:${postgresVersion}"
+
+    // Liquibase
+    implementation 'org.liquibase:liquibase-core:4.2.2'
+    liquibaseRuntime 'org.liquibase:liquibase-core:4.2.2'
+    liquibaseRuntime "org.postgresql:postgresql:${postgresVersion}"
+    liquibaseRuntime "ch.qos.logback:logback-core:${logbackVersion}"
+    liquibaseRuntime "ch.qos.logback:logback-classic:${logbackVersion}"
+
+    // Javax
+    implementation 'javax.persistence:javax.persistence-api:2.2'
+
+    // Logging
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+
+    // Json Serialization/Deserialization (gson)
+    implementation 'com.google.code.gson:gson:2.8.6'
+
+    // Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    // JUnit 5
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junit5Version}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junit5Version}"
+
+    // TestContainers
+    testImplementation "org.testcontainers:junit-jupiter:1.15.1"
+    testImplementation "org.testcontainers:postgresql:1.15.1"
+}
+
+test {
+//    debug = true
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+        showStandardStreams = true
+    }
+}
+
+/**
+ * Plugin liquibase:
+ * comando => 'liquibaseUpdate' aggiorna database
+ * ./gradlew liquibaseRollback -PliquibaseCommandValue=00010
+ */
+liquibase {
+    activities {
+        liquibase_property_main {
+            changeLogFile 'src/main/resources/db/liquibase/master.changelog.xml'
+            url project.ext.mainUrl
+            defaultSchemaName project.ext.dbschema
+            username project.ext.mainUsername
+            password project.ext.mainPassword
+//            changeLogParameters([schema: project.ext.dbschema])
+            changeLogParameters([value: project.ext.dbschema])
+        }
+//        security {
+//            changeLogFile 'src/main/db/security.groovy'
+//            url project.ext.securityUrl
+//            username project.ext.securityUsername
+//            password project.ext.securityPassword
+//        }
+//        diffMain {
+//            changeLogFile 'src/main/database/changelog.xml'
+//            url project.ext.mainUrl
+//            username project.ext.mainUsername
+//            password project.ext.mainPassword
+//            difftypes 'data'
+//        }
+    }
+//    runList = project.ext.runList
+}
+
+/**
+ * Plugin jooq
+ */
+jooq {
+    version = jooqVersion
+
+    configurations {
+        main {
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.DEBUG
+                jdbc {
+                    driver = 'org.postgresql.Driver'
+                    url = project.ext.mainUrl
+                    user = project.ext.mainUsername
+                    password = project.ext.mainPassword
+                    properties {
+                        property {
+                            key = 'PAGE_SIZE'
+                            value = 2048
+                        }
+                    }
+                }
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+                        inputSchema = project.ext.dbschema
+                        forcedTypes {
+//                            forcedType {
+//                                name = 'varchar'
+//                                includeExpression = '.*'
+//                                includeTypes = 'JSONB?'
+//                            }
+//                            forcedType {
+//                                name = 'varchar'
+//                                includeExpression = '.*'
+//                                includeTypes = 'INET'
+//                            }
+                        }
+                    }
+                    generate {
+                        relations = true
+                        deprecated = false
+                        records = true
+                        immutablePojos = false
+                        daos = true
+                        fluentSetters = true
+                    }
+                    target {
+                        packageName = group
+                        directory = 'src/generated/jooq'
+                    }
+                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
+                }
+            }
+        }
+    }
+}
