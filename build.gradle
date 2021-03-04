@@ -95,8 +95,8 @@ test {
 
 /**
  * Plugin liquibase:
- * comando => 'liquibaseUpdate' aggiorna database
- * ./gradlew liquibaseRollback -PliquibaseCommandValue=00010
+ * comando => 'update' aggiorna database
+ * ./gradlew rollback -PliquibaseCommandValue=00010
  */
 liquibase {
     activities {
